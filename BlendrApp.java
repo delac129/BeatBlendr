@@ -41,7 +41,11 @@ public class BlendrApp {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             // Specify the path to your index.html file
+<<<<<<< HEAD
             String filePath = "/Users/alfonzy/Desktop/GitHub/BeatBlendr/index.html";
+=======
+            String filePath = "/Users/alfonzy/Desktop/BeatBlendr/index.html";
+>>>>>>> parent of 3e59991 (Updated with API)
     
             File file = new File(filePath);
     
