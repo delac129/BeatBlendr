@@ -41,7 +41,7 @@ public class BlendrApp {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             // Specify the path to your index.html file
-            String filePath = "/Users/alfonzy/Desktop/BeatBlendr/index.html";
+            String filePath = "/Users/abdulrahimmohamed/Downloads/BeatBlendr-main/index.html";
     
             File file = new File(filePath);
     
