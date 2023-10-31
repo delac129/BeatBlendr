@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
@@ -28,26 +29,14 @@ public class BlendrApp {
         server.createContext("/login", new LoginHandler());
         server.createContext("/signup", new SignupHandler());
         server.createContext("/success", new SuccessHandler());
+        server.createContext("/getTopSongs", new GetTopSongsHandler());
+
 
         // Start the server
         server.start();
         System.out.println("Server is running on port 8081...");
     }
-/* 
-    static class RootHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            // Handle incoming HTTP requests
-            String filePath = "/Users/alfonzy/Desktop/BeatBlendr/index.html";
-            File file = new File(filePath);
-            String response = "Hello, World!";
-            exchange.sendResponseHeaders(200, response.length());
-            OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-        }
-    }
-    */
+
     static class RootHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -104,24 +93,44 @@ public class BlendrApp {
     }
 
     static class SuccessHandler implements HttpHandler {
+       
+       @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            String response = "<html><body><h1>Success! You can now use the app.</h1>";
+            response += "<a href='/getTopSongs'>Get Top Songs</a></body></html>";
+            
+            sendResponse(exchange, response);
+        }
+        
+     
+    }
+
+    static class GetTopSongsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            String authorizationCode = exchange.getRequestURI().getQuery().split("=")[1];
-            String accessToken = exchangeAuthorizationCodeForAccessToken(authorizationCode);
+            String accessToken = SpotifyClient.requestAccessTokenUsingClientCredentials();
+    
             if (accessToken != null) {
-                String response = "Success! You can now use the app.";
-                sendResponse(exchange, response);
-            } else {
-                String response = "Error during token exchange.";
-                sendResponse(exchange, response);
+                // Make an API request to Spotify to get your top songs using the access token
+                String topSongs = SpotifyClient.getTopSongs(accessToken);
+    
+                if (topSongs != null) {
+                    sendResponse(exchange, "Your Top Played Songs: " + topSongs);
+                    return;
+                }
             }
+    
+            // If there's an issue, return an error message
+            sendResponse(exchange, "Error retrieving top songs." + accessToken);
         }
     }
+    
+    
     private static String buildAuthorizationURL(String clientId) {
         String redirectUri = "http://localhost:8081/success";
         String state = generateRandomString(16);
-        String scope = "user-read-private user-read-email";
-
+        //String scope = "user-library-read user-top-read playlist-modify-public user-follow-read"; // Add more scopes as needed
+        String scope = "user-top-read";
         return "https://accounts.spotify.com/authorize?" +
             "response_type=code" +
             "&client_id=" + clientId +
@@ -130,70 +139,10 @@ public class BlendrApp {
             "&state=" + state;
     }
 
-    // Define exchangeAuthorizationCodeForAccessToken without ObjectMapper
-    private static String exchangeAuthorizationCodeForAccessToken(String authorizationCode) {
-        try {
-            // Set up the URL for the Spotify token endpoint
-            URL url = new URL("https://accounts.spotify.com/api/token");
 
-            // Create an HTTP connection to the URL
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
+    
 
-            // Set request properties
-            connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-            // Build the request body
-            Map<String, String> parameters = new LinkedHashMap<>();
-            parameters.put("grant_type", "authorization_code");
-            parameters.put("code", authorizationCode);
-            parameters.put("redirect_uri", "http://localhost:8081/success"); // Your redirect URI
-            parameters.put("client_id", "5beff6e7c7564da186c49f289c0d4b86"); // Your Spotify client ID
-            parameters.put("client_secret", "5bbc482aa0974fd2a62b04f1368e44d6"); // Your Spotify client secret
-
-            // Write the request body
-            StringBuilder postData = new StringBuilder();
-            for (Map.Entry<String, String> param : parameters.entrySet()) {
-                if (postData.length() != 0) postData.append('&');
-                postData.append(param.getKey());
-                postData.append('=');
-                postData.append(param.getValue());
-            }
-
-            byte[] postDataBytes = postData.toString().getBytes("UTF-8");
-            OutputStream os = connection.getOutputStream();
-            os.write(postDataBytes);
-
-            // Get the response from the Spotify token endpoint
-            int responseCode = connection.getResponseCode();
-            if (responseCode == 200) {
-                // Success, read the response
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String inputLine;
-                StringBuilder response = new StringBuilder();
-
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-
-                // Parse the JSON response to get the access token
-                String responseString = response.toString();
-                int startIndex = responseString.indexOf("access_token") + 15;
-                int endIndex = responseString.indexOf("\"", startIndex);
-
-                return responseString.substring(startIndex, endIndex);
-            } else {
-                // Handle the error, such as by logging or returning an error message
-                System.out.println("Error during token exchange: " + responseCode);
-                return null; // Handle this based on your application's requirements
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null; // Handle this based on your application's requirements
-        }
-    }
+    
 
     private static void sendResponse(HttpExchange exchange, String response) throws IOException {
         exchange.sendResponseHeaders(200, response.length());
@@ -212,25 +161,6 @@ public class BlendrApp {
         new SecureRandom().nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
-    static class TopSongsHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            String accessToken = exchange.getRequestHeaders().getFirst("Authorization");
-    
-            if (accessToken != null) {
-                // Make an API request to Spotify to get your top songs using the access token
-                String topSongs = ""; //getTopSongs(accessToken)
-    
-                if (topSongs != null) {
-                    sendResponse(exchange, "Your Top Played Songs: " + topSongs);
-                    return;
-                }
-            }
-    
-            // If there's an issue, return an error message
-            sendResponse(exchange, "Error retrieving top songs.");
-        }
-    }
-    
+     
 }
 
