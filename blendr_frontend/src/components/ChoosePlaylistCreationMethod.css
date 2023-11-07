@@ -1,0 +1,146 @@
+/* Base styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Arial", sans-serif;
+  min-height: 100vh;
+  background-image: linear-gradient(
+    30deg,
+    hsl(240deg 100% 20%) 0%,
+    hsl(260deg 92% 22%) 8%,
+    hsl(268deg 78% 24%) 14%,
+    hsl(275deg 65% 27%) 19%,
+    hsl(280deg 55% 30%) 22%,
+    hsl(286deg 46% 34%) 25%,
+    hsl(292deg 39% 37%) 27%,
+    hsl(298deg 32% 40%) 28%,
+    hsl(304deg 28% 44%) 30%,
+    hsl(309deg 25% 49%) 31%,
+    hsl(314deg 26% 54%) 32%,
+    hsl(318deg 28% 58%) 32%,
+    hsl(322deg 30% 63%) 33%,
+    hsl(326deg 32% 68%) 34%,
+    hsl(329deg 34% 72%) 35%,
+    hsl(333deg 36% 76%) 37%,
+    hsl(336deg 39% 81%) 39%,
+    hsl(339deg 42% 85%) 42%,
+    hsl(341deg 46% 89%) 47%,
+    hsl(344deg 53% 94%) 56%,
+    hsl(347deg 82% 98%) 81%
+  );
+}
+
+.title {
+  font-family: "Roboto", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+    sans-serif;
+  margin-top: 5rem;
+}
+
+/* Button base style */
+.mood-btn {
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  transition: transform 0.2s; /* Animation for button press */
+  border-radius: 5px;
+}
+
+.methodButtons {
+  margin-top: 15rem;
+}
+
+.create-btn {
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  transition: transform 0.2s; /* Animation for button press */
+  border-radius: 5px;
+  background-color: #5c3c92;
+}
+
+.button-link {
+  color: white;
+}
+
+a:link {
+  text-decoration: none;
+}
+
+a:visited {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+a:active {
+  text-decoration: none;
+}
+
+/* Individual mood button styles */
+.mood-btn.very-sad {
+  background-color: #5c3c92;
+}
+.mood-btn.sad {
+  background-color: #3d5a80;
+}
+.mood-btn.somber {
+  background-color: #507dbc;
+}
+.mood-btn.content {
+  background-color: #74c69d;
+}
+.mood-btn.happy {
+  background-color: #f9d56e;
+}
+.mood-btn.elated {
+  background-color: #f9844a;
+}
+
+/* Hover effects for buttons */
+.mood-btn:hover {
+  transform: scale(1.1); /* Scale button on hover */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.p-title {
+  margin-top: 15rem;
+}
+
+.icon-2-playlist-method {
+  /* Ensure the icon is not too large */
+  max-height: 1rem;
+  max-width: 1rem;
+
+  /* Adjust position to be relative to the parent element */
+  position: relative;
+  top: 7.5rem;
+  transform: translateY(-50%); /* Center it vertically */
+  transform: scale(3);
+}
+.copyright-playlist-method {
+  margin-top: 10rem;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 576px) {
+  .mood-btn {
+    padding: 8px 16px; /* Smaller padding for smaller screens */
+    font-size: 14px; /* Smaller font size for smaller screens */
+    margin: 3px 1px; /* Adjust margin for alignment */
+  }
+}

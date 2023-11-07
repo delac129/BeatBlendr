@@ -1,0 +1,29 @@
+.album-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.album-item {
+  display: flex;
+  flex-direction: column;
+  margin: 10px;
+  border: 1px solid #ddd;
+  overflow: hidden;
+}
+
+.album-image {
+  max-width: 100%;
+  height: auto;
+}
+
+.album-info {
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 5px;
+  color: white;
+}
+
+.album-title,
+.album-artist {
+  margin: 0;
+}
