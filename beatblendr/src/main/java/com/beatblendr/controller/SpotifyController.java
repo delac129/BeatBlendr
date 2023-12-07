@@ -8,7 +8,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.function.Function;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,12 +38,16 @@ import se.michaelthelin.spotify.model_objects.specification.AudioFeatures;
 import se.michaelthelin.spotify.model_objects.specification.Paging;
 import se.michaelthelin.spotify.model_objects.specification.PagingCursorbased;
 import se.michaelthelin.spotify.model_objects.specification.Playlist;
+import se.michaelthelin.spotify.model_objects.specification.Recommendations;
 import se.michaelthelin.spotify.model_objects.specification.SavedAlbum;
 import se.michaelthelin.spotify.model_objects.specification.Track;
+import se.michaelthelin.spotify.model_objects.specification.TrackSimplified;
 import se.michaelthelin.spotify.model_objects.specification.User;
 import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
 import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
 import se.michaelthelin.spotify.requests.data.artists.GetArtistsTopTracksRequest;
+import se.michaelthelin.spotify.requests.data.browse.GetRecommendationsRequest;
+import se.michaelthelin.spotify.requests.data.browse.miscellaneous.GetAvailableGenreSeedsRequest;
 import se.michaelthelin.spotify.requests.data.follow.GetUsersFollowedArtistsRequest;
 import se.michaelthelin.spotify.requests.data.library.GetCurrentUsersSavedAlbumsRequest;
 import se.michaelthelin.spotify.requests.data.personalization.simplified.GetUsersTopArtistsRequest;
@@ -130,25 +137,10 @@ public class SpotifyController {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to fetch user details from Spotify");
             return;
         }else{
-            response.sendRedirect(customIp + "/create-playlist-method?id="+user.getId()+"&username="+user.getDisplayName());
+            response.sendRedirect(customIp + "/choose-method?id="+user.getId()+"&username="+user.getDisplayName());
         }
 	}
 	
-// private String getAccessToken(@RequestParam String userId) {
-//     UserDetails userDetails = userDetailsRepository.findByRefId(userId);
-
-//     String accessToken;
-//     try {
-//         accessToken = userDetails.getAccessToken();
-//         if (accessToken == null) {
-//             return null;
-//         }
-//     } catch (Exception e) {
-//         System.out.println("Exception occurred while getting the access token: " + e);
-//         return null;
-//     }
-//     return null;
-// }
 	
 	@GetMapping(value = "user-saved-album")
 	public SavedAlbum[] getCurrentUserSavedAlbum(@RequestParam String userId) {
@@ -407,10 +399,177 @@ public List<Track> selectTracks(@RequestParam String userId, double mood) {
 }
 
 
-// This function returns an 3 values to the front end. The Tracks object, accessToken, and the playlist id.
+/*
+ * function returns an array of genre strings
+ * plan to use this function to for new feature 
+ */
+@GetMapping(value = "choose-genre")
+public String[] chooseGenre(@RequestParam String userId){
 
-@GetMapping(value = "create-playlist")
-public ResponseEntity<Map<String, Object>> createPlaylist(@RequestParam String userId, @RequestParam(required = false) String mood) {
+
+    final String[] genreSeeds;
+  
+    UserDetails userDetails = userDetailsRepository.findByRefId(userId);
+    SpotifyApi spotifyApi = spotifyConfiguration.getSpotifyObject();
+
+    String newAccessToken = refreshAccessTokenIfNeeded(userDetails);
+    if(newAccessToken != null) {
+        userDetails.setAccessToken(newAccessToken);
+    }
+    spotifyApi.setAccessToken(userDetails.getAccessToken());
+
+    GetAvailableGenreSeedsRequest getAvailableGenreSeedsRequest = spotifyApi.getAvailableGenreSeeds()
+        .build();
+
+    try{
+        genreSeeds = getAvailableGenreSeedsRequest.execute();
+        System.out.println(".... Successfully returned genre seeds");
+        //System.out.println("\n\n" + genreSeeds + "\n\n");
+        return genreSeeds;
+
+    }
+    catch(Exception e){
+        System.out.println("Error occurred while fetching track data: " + e.getMessage());
+    }
+       return  new String[0];
+}
+
+private TrackSimplified[] get_recommended_tracks(@RequestParam String userId, @RequestParam double mood, @RequestParam String genre) {
+    // Initialize default empty array
+    TrackSimplified[] defaultTracks = new TrackSimplified[0];
+
+    UserDetails userDetails = userDetailsRepository.findByRefId(userId);
+    SpotifyApi spotifyApi = spotifyConfiguration.getSpotifyObject();
+
+    String newAccessToken = refreshAccessTokenIfNeeded(userDetails);
+    if(newAccessToken != null) {
+        userDetails.setAccessToken(newAccessToken);
+    }
+    spotifyApi.setAccessToken(userDetails.getAccessToken());
+
+    String[] artists = new String[2];  
+    String[] topArtists = aggregateTopArtists(userId);
+    if (topArtists == null || topArtists.length < 2) {
+        return defaultTracks; // Return default empty array if topArtists is null or has less than 2 elements
+    }
+    for (int i = 0; i < 2; i++) {
+        String[] parts = topArtists[i].split(":");
+        String artistId = parts[2];
+        artists[i] = artistId;
+    }
+    String topArtist = artists[0] + "," + artists[1];
+    System.out.println("\n\n\nTop 2 artists from user: " + topArtist + "\n\n\n\n\n");
+
+    GetRecommendationsRequest getRecommendationsRequest = spotifyApi.getRecommendations()
+        .limit(50)
+        .seed_artists(topArtist)
+        .seed_genres(genre)
+        .build();
+
+    try {
+        final Recommendations recommendations = getRecommendationsRequest.execute();
+        TrackSimplified[] tracks = recommendations.getTracks();
+        System.out.println("Tracks from TracksSimplified: " + tracks);
+        if (tracks == null) {
+            System.out.println("No tracks received from Spotify API.");
+            return defaultTracks;
+        }
+        return tracks;
+    } catch(Exception e) {
+        System.out.println("Error occurred while fetching track data: " + e.getMessage());
+        return defaultTracks;
+    }
+}
+
+
+// This function returns an 3 values to the front end. The Tracks object, accessToken, and the playlist id.
+@GetMapping(value = "create-playlist-complex")
+public ResponseEntity<Map<String, Object>> createPlaylistComplex(@RequestParam String userId, @RequestParam String mood, @RequestParam String genre) {
+    System.out.println("... creating playlist complex");
+    System.out.println("Received userId: " + userId);
+    System.out.println("Received moodString: " + mood);
+
+    Map<String, Object> response = new HashMap<>();
+
+	UserDetails userDetails = userDetailsRepository.findByRefId(userId);
+	SpotifyApi spotifyApi = spotifyConfiguration.getSpotifyObject();
+
+	String newAccessToken = refreshAccessTokenIfNeeded(userDetails);
+    if(newAccessToken != null) {
+        userDetails.setAccessToken(newAccessToken);
+    }
+    spotifyApi.setAccessToken(userDetails.getAccessToken());
+
+    response.put("accessToken", userDetails.getAccessToken());
+    // Default value
+    double mood_double = 50.0;
+    if (mood != null) {
+        try {
+            mood_double = Double.parseDouble(mood);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid mood value: " + mood);
+        } catch (NullPointerException e) {
+            System.out.println("Mood string is null.");
+        }
+    } else {
+        System.out.println("Mood string is missing.");
+    }
+
+
+    if(mood_double != 50.0){
+        TrackSimplified[] selectedTracks = get_recommended_tracks(userId, mood_double, genre);
+        response.put("genres", chooseGenre(userId));
+
+    try {
+    // Create a new playlist for the user
+    String playlistName = "Blendr Beta " + mood;
+    CreatePlaylistRequest createPlaylistRequest = spotifyApi.createPlaylist(userId, playlistName)
+        .public_(false)
+        .build();
+    Playlist playlist = createPlaylistRequest.execute();
+    String playlistId = playlist.getId();
+    response.put("playlistId", playlistId);
+
+    // Convert the TrackSimplified objects to their URI
+    List<String> selectedTracksUri = Arrays.stream(selectedTracks)
+        .map(TrackSimplified::getUri)
+        .collect(Collectors.toList());
+
+    Collections.shuffle(selectedTracksUri);
+
+    // Limit the number of tracks to add to 30
+    List<String> tracksToAddUris = selectedTracksUri.stream()
+        .limit(30)
+        .collect(Collectors.toList());
+
+    // Add tracks to the playlist
+    if (!tracksToAddUris.isEmpty()) {
+        AddItemsToPlaylistRequest addItemsToPlaylistRequest = spotifyApi
+            .addItemsToPlaylist(playlistId, tracksToAddUris.toArray(new String[0]))
+            .build();
+        addItemsToPlaylistRequest.execute();
+    }
+
+    response.put("tracks", selectedTracks);
+
+    System.out.println(".... Playlist id = " + playlistId);
+    return ResponseEntity.ok(response);
+
+} catch (Exception e) {
+        System.out.println("Error occurred while creating playlist: " + e.getMessage());
+        return ResponseEntity.badRequest().body(null);
+    }
+    }
+    else{
+       return ResponseEntity.badRequest().body(null);
+    }
+}
+
+
+
+// This function returns an 3 values to the front end. The Tracks object, accessToken, and the playlist id.
+@GetMapping(value = "create-playlist-simple")
+public ResponseEntity<Map<String, Object>> createPlaylistSimple(@RequestParam String userId, @RequestParam String mood) {
     System.out.println("... creating playlist");
     System.out.println("Received userId: " + userId);
     System.out.println("Received moodString: " + mood);
@@ -444,6 +603,7 @@ public ResponseEntity<Map<String, Object>> createPlaylist(@RequestParam String u
 
     if(mood_double != 50.0){
         List<Track> selectedTracks = selectTracks(userId, mood_double);
+        response.put("genres", chooseGenre(userId));
 
         // Extract URIs from the selected tracks for adding them to Spotify playlist
         List<String> selectedTracksUri = selectedTracks.stream()
