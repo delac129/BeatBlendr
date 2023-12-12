@@ -13,13 +13,18 @@ import lombok.Getter;
 import lombok.Setter;
 import java.util.Date;
 
+//this class is a JPA entity to map to a database table
 @Entity
 @Table(name = "USER_DETAILS")
+// Lombok to generate getters for all fields.
 @Getter
+// Lombok to generate setters for all fields.
 @Setter
 public class UserDetails implements Serializable{
+    // serialVersionUID is a unique identifier for Serializable classes.
    private static final long serialVersionUID = 3937414011943770889L;
 
+   //primary key of the entity.
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID")
@@ -41,7 +46,7 @@ public class UserDetails implements Serializable{
 	private String refId;
 
     @Column(name = "EXPIRATION_TIME_MILLIS")
-    private Long expirationTimeMillis; // New attribute for token expiration time
+    private Long expirationTimeMillis; 
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CREATED_ON")

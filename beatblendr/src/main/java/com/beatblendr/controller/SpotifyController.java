@@ -175,7 +175,7 @@ public String[] aggregateTopArtists(@RequestParam String userId) {
                 .build();
 
         try {
-            // Execute the request and process the response
+            // execute the request and process the response for getting users top artists
             final Paging<Artist> artistPaging = getUsersTopArtistsRequest.execute();
             Artist[] artists = artistPaging.getItems();
             for (Artist artist : artists) {

@@ -27,6 +27,8 @@ public class SpotifyConfiguration {
     }
 
 
+    // This method is creating & configuring a SpotifyApi object.
+    // This is used to interact with the Spotify Web API 
     public SpotifyApi getSpotifyObject(){
         
         URI redirectURL = SpotifyHttpManager.makeUri(customIp + "/api/get-user-code");
