@@ -32,7 +32,6 @@ public class SpotifyControllerTest {
 
         String[] result = spotifyController.aggregateTopArtists("abdulrahim24");
 
-        // Assertions
         assertNotNull(result, "Result should not be null");
         assertTrue(result.length > 0, "Result should contain at least one artist URI");
     }
@@ -43,7 +42,6 @@ public class SpotifyControllerTest {
 
         String[] result = spotifyController.aggregateTopTracks("abdulrahim24");
 
-        // Assertions
         assertNotNull(result, "Result should not be null");
         assertTrue(result.length > 0, "Result should contain at least one track URI");
     }
@@ -53,7 +51,6 @@ public class SpotifyControllerTest {
 
         List<Track> result = spotifyController.selectTracks("abdulrahim24", 0.55);
 
-        // Assertions
         assertNotNull(result, "Result should not be null");
         assertTrue(result.size() > 0, "Result should contain at least one track URI");
     }
@@ -63,7 +60,6 @@ public class SpotifyControllerTest {
 
         String[] result = spotifyController.chooseGenre("abdulrahim24");
 
-        // Assertions
         assertNotNull(result, "Result should not be null");
         assertTrue(result.length > 0, "Result should contain at least one track URI");
     }
@@ -73,7 +69,6 @@ public class SpotifyControllerTest {
 
         TrackSimplified[] result = spotifyController.get_recommended_tracks("abdulrahim24", 0.55, "pop, club");
 
-        // Assertions
         assertNotNull(result, "Result should not be null");
         assertTrue(result.length > 0, "Result should contain at least one track URI");
     }
@@ -83,7 +78,6 @@ public class SpotifyControllerTest {
 
         ResponseEntity<Map<String, Object>> result = spotifyController.createPlaylistComplex("abdulrahim24", "0.55", "pop, club");
 
-        // Assertions
         assertNotNull(result, "Result should not be null");
         
     }
@@ -93,7 +87,6 @@ public class SpotifyControllerTest {
 
         ResponseEntity<Map<String, Object>> result = spotifyController.createPlaylistSimple("abdulrahim24", "0.55");
 
-        // Assertions
         assertNotNull(result, "Result should not be null");
         
     }

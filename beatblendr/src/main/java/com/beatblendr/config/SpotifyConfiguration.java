@@ -11,8 +11,11 @@ public class SpotifyConfiguration {
     @Value("${redirect.server.ip}")
     private String customIp;
 
-    private String clientId = "a5879634c44947c3baaa1a0bb8c87f4d";
-    private String clientSecret = "45cb87a03c4f41698b703cf40bac27bc";
+    @Value("${spotify.client.id}")
+    private String clientId;
+
+    @Value("${spotify.client.secret}")
+    private String clientSecret;
 
 
      public String getClientId() {
